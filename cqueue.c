@@ -14,8 +14,7 @@ int is_power2(uint64_t i);
 // number of elements of at most elem_size size
 // returns the address of the newly allocated queue, or NULL on error
 cqueue_spsc* cqueue_spsc_new(size_t capacity, size_t elem_size) {
-  int n_cachelines;
-  size_t realcap, i;
+  size_t realcap, i, n_cachelines;
   cqueue_spsc *q;
   cqueue_spsc_slot *slot;
 
@@ -40,14 +39,21 @@ cqueue_spsc* cqueue_spsc_new(size_t capacity, size_t elem_size) {
   // round the elem size up to the nearest cacheline and account for 
   // slot overhead
   n_cachelines = (elem_size + sizeof(_Atomic size_t))/ LEVEL1_DCACHE_LINESIZE;
-  if (n_cachelines * LEVEL1_DCACHE_LINESIZE != elem_size)
+  if (n_cachelines * LEVEL1_DCACHE_LINESIZE != 
+      (elem_size + sizeof(_Atomic size_t)))
     n_cachelines++;
   q->elem_size = n_cachelines * LEVEL1_DCACHE_LINESIZE;
+
+  // check for overflow
+  i = q->capacity * q->elem_size;
+  if ((i < q->capacity) || (i < q->elem_size)) {
+    free(q);
+    return NULL;
+  }
  
   // allocate array as a cacheline-aligned chunk of elements, where each
   // element has a size that is a multiple of the cacheline size
-  q->array = aligned_alloc(LEVEL1_DCACHE_LINESIZE,
-                          q->capacity * q->elem_size);
+  q->array = aligned_alloc(LEVEL1_DCACHE_LINESIZE, i);
   if (!q->array) {
     free(q);
     return NULL;
