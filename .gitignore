@@ -32,3 +32,8 @@
 callgrind.out.*
 
 # project executables
+
+# generated documentation
+doc/xml
+doc/man
+doc/html
