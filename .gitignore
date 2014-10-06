@@ -32,6 +32,7 @@
 callgrind.out.*
 
 # project executables
+cqueue_test
 
 # generated documentation
 doc/xml
