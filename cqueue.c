@@ -1,18 +1,33 @@
+/*!
+  \file
+  \copyright Copyright (c) 2014, Richard Fujiyama
+  Licensed under the terms of the New BSD license.
+*/
+
 #include "cqueue.h"
 
+/*! internal representation of a spsc slot
+
+  This is a helper struct to maintain the illusion of an array of slots.
+  Contains the used member that is atomically loaded or written to by a 
+  pusher or popper, and a pointer to the slot's storage space to provide
+  access to pushers and poppers. Although data is a zero length array, it
+  allows access to bytes beyond it that are allocated specifically for its
+  use by cqueue_spsc_new().
+*/
 typedef struct cqueue_spsc_slot {
-  _Atomic size_t used;
-  unsigned char data[];
+  _Atomic size_t used; //!< 1 when in use (has data), 0 otherwise
+  unsigned char data[]; //!< pointer to data provided to pushers/poppers
 } cqueue_spsc_slot;
 
-// utility functions
+
+// utility function declarations
 uint64_t next_power2(uint64_t i);
 int is_power2(uint64_t i);
 
 
-// allocates and initializes a queue capable of holding at least capacity
-// number of elements of at most elem_size size
-// returns the address of the newly allocated queue, or NULL on error
+// public functions declared in the header
+
 cqueue_spsc* cqueue_spsc_new(size_t capacity, size_t elem_size) {
   size_t realcap, i, n_cachelines;
   cqueue_spsc *q;
@@ -70,10 +85,6 @@ cqueue_spsc* cqueue_spsc_new(size_t capacity, size_t elem_size) {
   return q;
 }
 
-// returns a pointer to the next available queue slot for pushing
-// returns NULL when the queue is full
-// cqueue_spsc_push_slot_finish must be called after a successful call
-// ex: cqueue_spsc_trypush_slot, write data, cqueue_spsc_push_slot_finish
 void *cqueue_spsc_trypush_slot(cqueue_spsc *q) {
   assert(q);
 
@@ -87,10 +98,6 @@ void *cqueue_spsc_trypush_slot(cqueue_spsc *q) {
   return slot->data;
 }
 
-// publish the fact that the push slot is now used
-// must be called after a successful cqueue_spsc_trypush_slot call
-// ex: cqueue_spsc_trypush_slot, write data, cqueue_spsc_push_slot_finish
-// not calling this function may result in queue inconsistency
 void cqueue_spsc_push_slot_finish(cqueue_spsc *q) {
   assert(q);
 
@@ -101,10 +108,6 @@ void cqueue_spsc_push_slot_finish(cqueue_spsc *q) {
   q->push_idx = (q->push_idx + 1) & (q->capacity - 1);
 }
 
-// returns a pointer to the next available queue slot for popping
-// returns NULL when the queue is empty
-// cqueue_spsc_pop_slot_finish must be called after a successful call
-// ex: cqueue_spsc_trypop_slot, read data, cqueue_spsc_pop_slot_finish
 void *cqueue_spsc_trypop_slot(cqueue_spsc *q) {
   assert(q);
 
@@ -118,10 +121,6 @@ void *cqueue_spsc_trypop_slot(cqueue_spsc *q) {
   return slot->data;
 }
 
-// publish the fact that the pop slot is now unused
-// must be called after a successful cqueue_spsc_trypop_slot call
-// ex: cqueue_spsc_trypop_slot, read data, cqueue_spsc_pop_slot_finish
-// not calling this function may result in queue inconsistency
 void cqueue_spsc_pop_slot_finish(cqueue_spsc *q) {
   assert(q);
 
@@ -132,9 +131,16 @@ void cqueue_spsc_pop_slot_finish(cqueue_spsc *q) {
   q->pop_idx = (q->pop_idx + 1) & (q->capacity - 1);
 }
 
-// returns the next highest power of 2
-// if i is already a power of 2, just return it
-// returns 0 when i > (1UL << 63))
+
+// private utility functions
+
+/*! Round up to the next power of 2
+
+  \param[in] i the int to round
+  \returns the next highest power of 2
+  \returns i if is already a power of 2
+  \returns 0 when i > (1UL << 8*sizeof(size_t)-1))
+*/
 uint64_t next_power2(uint64_t i) {
   if (i == 0)
     return 1;
@@ -151,6 +157,11 @@ uint64_t next_power2(uint64_t i) {
   return i;
 }
 
+/*! Check if i is a power of 2
+
+  \param[in] i the int to check
+  \returns 1 if i is a power of 2, 0 otherwise
+*/
 int is_power2(uint64_t i) {
   if (i == 0)
     return 0;
