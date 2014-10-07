@@ -22,8 +22,8 @@ typedef struct cqueue_spsc_slot {
 
 
 // utility function declarations
-uint64_t next_power2(uint64_t i);
-int is_power2(uint64_t i);
+size_t next_power2(size_t i);
+int is_power2(size_t i);
 
 
 // public functions declared in the header
@@ -136,22 +136,18 @@ void cqueue_spsc_pop_slot_finish(cqueue_spsc *q) {
 
 /*! Round up to the next power of 2
 
-  \param[in] i the int to round
+  \param[in] i the int to round, 0 <= i <= SIZE_MAX/2 +1
   \returns the next highest power of 2
   \returns i if is already a power of 2
-  \returns 0 when i > (1UL << 8*sizeof(size_t)-1))
+  \returns 0 when i > SIZE_MAX/2 +1
 */
-uint64_t next_power2(uint64_t i) {
+size_t next_power2(size_t i) {
   if (i == 0)
     return 1;
 
   i--;
-  i |= i >> 1;
-  i |= i >> 2;
-  i |= i >> 4;
-  i |= i >> 8;
-  i |= i >> 16;
-  i |= i >> 32;
+  for (int j = 1; j < CHAR_BIT*sizeof(size_t)-1; j*=2)
+    i |= i >> j;
   i++;
 
   return i;
@@ -159,10 +155,10 @@ uint64_t next_power2(uint64_t i) {
 
 /*! Check if i is a power of 2
 
-  \param[in] i the int to check
+  \param[in] i the int to check, 0 <= i <= SIZE_MAX
   \returns 1 if i is a power of 2, 0 otherwise
 */
-int is_power2(uint64_t i) {
+int is_power2(size_t i) {
   if (i == 0)
     return 0;
 

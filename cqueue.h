@@ -9,8 +9,10 @@
 
 #include <stdlib.h>     // aligned_alloc
 #include <stdint.h>     // uintXX_t
+#include <limits.h>     // CHAR_BIT
 #include <assert.h>
 #include <stdatomic.h>  // atomics
+
 
 #ifndef LEVEL1_DCACHE_LINESIZE
 /*! Used to align and place objects to avoid false sharing
