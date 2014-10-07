@@ -49,8 +49,15 @@ int spsc_new_pass() {
   d = (void *)&q->pop_idx - (void *)&q->push_idx;
   assert(d == LEVEL1_DCACHE_LINESIZE); // should be 1 cacheline due to padding
 
-  // todo: free q
-  // todo: check elem_size padding out to cachelines
+  // check deletion
+  cqueue_spsc_delete(&q);
+  assert(!q);
+
+  // check elem_size padding rounding up
+  q  = cqueue_spsc_new(26, LEVEL1_DCACHE_LINESIZE-sizeof(size_t)+1);
+  assert(q);
+  assert(q->elem_size == 2*LEVEL1_DCACHE_LINESIZE);  // round up to 2 cachelines
+
   return 1;
 }
 

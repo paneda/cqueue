@@ -26,10 +26,11 @@
 
 /*! The main struct for spsc cqueues
 
-  These should only be allocated by the cqueue_spsc_new() function since there
-  are strict cacheline alignment and padding issues to avoid lockless operation.
+  These should only be allocated by cqueue_spsc_new() since there are strict
+  cacheline alignment and padding issues to enable lockless operation.
 
-  Push and pop operations are thread safe for at most one concurrent push and pop operation (ie, a single reader and a single writer).
+  Push and pop operations are thread safe for at most one concurrent push and
+  pop operation (ie, a single reader and a single writer).
 */
 typedef struct cqueue_spsc {
   // stick read-only elements in front to account for reads outside the struct
@@ -54,6 +55,13 @@ typedef struct cqueue_spsc {
   \return the address of the newly allocated queue, or NULL on error
 */
 cqueue_spsc* cqueue_spsc_new(size_t capacity, size_t elem_size);
+
+/*! Deallocates the queue
+
+  \param[in,out] p a pointer to the pointer to the queue to be deallocated. 
+  On success, *p will be set to NULL.
+*/
+void cqueue_spsc_delete(cqueue_spsc **p);
 
 /*! Get a pointer to the next available queue slot for pushing
 

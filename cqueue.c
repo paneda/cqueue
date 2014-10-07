@@ -85,6 +85,18 @@ cqueue_spsc* cqueue_spsc_new(size_t capacity, size_t elem_size) {
   return q;
 }
 
+void cqueue_spsc_delete(cqueue_spsc **p) {
+  cqueue_spsc *q = *p;
+  if(!q)
+    return;
+
+  if(q->array)
+    free(q->array);
+
+  free(q);
+  *p = NULL;
+}
+
 void *cqueue_spsc_trypush_slot(cqueue_spsc *q) {
   assert(q);
 
