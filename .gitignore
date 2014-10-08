@@ -33,6 +33,8 @@ callgrind.out.*
 
 # project executables
 cqueue_test
+cqueue_test_singlethread
+cqueue_test_passing
 
 # generated documentation
 doc/xml

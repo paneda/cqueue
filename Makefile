@@ -1,17 +1,17 @@
 CC?=gcc
 CFLAGS=-g -march=native -O3 -pipe -std=c11 -Wall -Werror -DCQUEUE_DEBUG
 LDFLAGS=-pthread
-EXES=cqueue_test
+EXES=cqueue_test cqueue_test_singlethread cqueue_test_passing
 OBJS=cqueue.o
 TEMPDIR := $(shell mktemp -d)
 
 default: $(EXES)
 cqueue_test: $(OBJS)
 		$(CC) $(CFLAGS) $@.c $(OBJS) -o $@ $(LDFLAGS)
-squeue_test_threads: $(OBJS) squeue_test_threads.c
-		$(CC) squeue_test_threads.c $(OBJS) -o $@ $(LDFLAGS)
-squeue_test_passing: $(OBJS) squeue_test_passing.c
-		$(CC) squeue_test_passing.c $(OBJS) -o $@ $(LDFLAGS)
+cqueue_test_singlethread: $(OBJS)
+		$(CC) $(CFLAGS) $@.c $(OBJS) -o $@ $(LDFLAGS)
+cqueue_test_passing: $(OBJS)
+		$(CC) $(CFLAGS) -D_GNU_SOURCE $@.c $(OBJS) -o $@ $(LDFLAGS)
 %.o: %.c
 		$(CC) $(CFLAGS) -MMD -MP -c $< -o $@
 
