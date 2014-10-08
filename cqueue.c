@@ -137,7 +137,7 @@ void cqueue_spsc_pop_slot_finish(cqueue_spsc *q) {
   assert(q);
 
   cqueue_spsc_slot *slot;
-  slot = (cqueue_spsc_slot *)(q->array + q->push_idx * q->elem_size);
+  slot = (cqueue_spsc_slot *)(q->array + q->pop_idx * q->elem_size);
 
   atomic_store_explicit(&slot->used, 0, memory_order_release);
   q->pop_idx = (q->pop_idx + 1) & (q->capacity - 1);
