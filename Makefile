@@ -1,6 +1,6 @@
 CC?=gcc
-CFLAGS=-g -march=native -O3 -pipe -std=c11 -Wall -Werror
-LDFLAGS=-g -lpthread
+CFLAGS=-g -march=native -O3 -pipe -std=c11 -Wall -Werror -DCQUEUE_DEBUG
+LDFLAGS=-pthread
 EXES=cqueue_test
 OBJS=cqueue.o
 TEMPDIR := $(shell mktemp -d)

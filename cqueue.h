@@ -2,6 +2,9 @@
   \file
   \copyright Copyright (c) 2014, Richard Fujiyama
   Licensed under the terms of the New BSD license.
+
+  Compilation Options:
+  CQUEUE_DEBUG: enables the function cqueue_spsc_print()
 */
 
 #ifndef _CQUEUE_
@@ -13,6 +16,9 @@
 #include <assert.h>
 #include <stdatomic.h>  // atomics
 
+#ifdef CQUEUE_DEBUG
+#include <stdio.h>      // printf
+#endif
 
 #ifndef LEVEL1_DCACHE_LINESIZE
 /*! Used to align and place objects to avoid false sharing
@@ -98,5 +104,11 @@ void *cqueue_spsc_trypop_slot(cqueue_spsc *q);
   \warning Not calling this function may result in queue inconsistency
 */
 void cqueue_spsc_pop_slot_finish(cqueue_spsc *q);
+
+#ifdef CQUEUE_DEBUG
+//! Print the queue contents to stdout
+void cqueue_spsc_print(cqueue_spsc *q);
+#endif
+
 
 #endif

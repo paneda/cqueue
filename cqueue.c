@@ -143,6 +143,32 @@ void cqueue_spsc_pop_slot_finish(cqueue_spsc *q) {
   q->pop_idx = (q->pop_idx + 1) & (q->capacity - 1);
 }
 
+#ifdef CQUEUE_DEBUG
+void cqueue_spsc_print(cqueue_spsc *q) {
+  assert(q);
+
+  cqueue_spsc_slot *slot;
+  unsigned char *buf;
+
+  printf("push_idx: %zu\n", q->push_idx);
+  printf("pop_idx: %zu\n", q->pop_idx);
+  for (size_t i=0; i < q->capacity; i++) {
+    slot = (cqueue_spsc_slot *)(q->array + i * q->elem_size);
+    printf("slot[%zu]:", i);
+
+    if (slot->used)
+      printf(" (used)\n");
+    else
+      printf("\n");
+
+    buf = (unsigned char *)&slot->data;
+    for (size_t j=0; j < q->elem_size - sizeof(size_t); j++)
+      printf("%02x ", buf[j]);
+    printf("\n");
+  }
+
+}
+#endif  // CQUEUE_DEBUG
 
 // private utility functions
 
