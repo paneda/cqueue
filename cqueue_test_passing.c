@@ -104,10 +104,7 @@ void *passer(void *targ) {
   for (int i=0; i < NUM_THREADS; i++)
     printf("thread[%d]: %d passes\n", targs[i].id, targs[i].passes);
 
-  pthread_t self = pthread_self();
-
-  if(self > 1)
-    pthread_kill(self, SIGTERM);
+  pthread_kill(pthread_self(), SIGTERM);
 
   pthread_exit(NULL);
 }
