@@ -69,6 +69,10 @@ cqueue_spsc* cqueue_spsc_new(size_t capacity, size_t elem_size);
 */
 void cqueue_spsc_delete(cqueue_spsc **p);
 
+void *cqueue_spsc_push_slot(cqueue_spsc *q);
+
+
+
 /*! Get a pointer to the next available queue slot for pushing
 
   cqueue_spsc_push_slot_finish must be called after a successful call
@@ -86,6 +90,12 @@ void *cqueue_spsc_trypush_slot(cqueue_spsc *q);
   \warning Not calling this function may result in queue inconsistency
 */
 void cqueue_spsc_push_slot_finish(cqueue_spsc *q);
+
+
+void *cqueue_spsc_pop_slot(cqueue_spsc *q);
+
+
+
 
 /*! Get a pointer to the next available queue slot for popping
 
@@ -110,5 +120,4 @@ void cqueue_spsc_pop_slot_finish(cqueue_spsc *q);
 void cqueue_spsc_print(cqueue_spsc *q);
 #endif
 
-
-#endif
+#endif  // _CQUEUE_

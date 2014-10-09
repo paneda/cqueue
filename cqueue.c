@@ -97,6 +97,18 @@ void cqueue_spsc_delete(cqueue_spsc **p) {
   *p = NULL;
 }
 
+void *cqueue_spsc_push_slot(cqueue_spsc *q) {
+  assert(q);
+
+  cqueue_spsc_slot *slot;
+  slot = (cqueue_spsc_slot *)(q->array + q->push_idx * q->elem_size);
+
+  // check if the queue is full, ie we are trying to write to a used slot
+  while(atomic_load_explicit(&slot->used, memory_order_acquire));
+
+  return slot->data;
+}
+
 void *cqueue_spsc_trypush_slot(cqueue_spsc *q) {
   assert(q);
 
@@ -118,6 +130,18 @@ void cqueue_spsc_push_slot_finish(cqueue_spsc *q) {
   
   atomic_store_explicit(&slot->used, 1, memory_order_release);
   q->push_idx = (q->push_idx + 1) & (q->capacity - 1);
+}
+
+void *cqueue_spsc_pop_slot(cqueue_spsc *q) {
+  assert(q);
+
+  cqueue_spsc_slot *slot;
+  slot = (cqueue_spsc_slot *)(q->array + q->pop_idx * q->elem_size);
+
+  // check if the queue is empty, ie we are trying to read an unused slot
+  while(!atomic_load_explicit(&slot->used, memory_order_acquire));
+
+  return slot->data;
 }
 
 void *cqueue_spsc_trypop_slot(cqueue_spsc *q) {
