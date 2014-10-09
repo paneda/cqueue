@@ -2,6 +2,7 @@
 #include <stdio.h>  // printf
 #include <assert.h>
 #include <stddef.h> // ptrdiff_t
+#include <stdio.h>  // printf
 
 #define PASSFAIL(fn) \
   if(fn) \
@@ -12,11 +13,16 @@
 // function declarations
 int spsc_new_pass();
 int spsc_new_fail();
+int spsc_trypush_slot_pass();
+int spsc_trypop_slot_pass();
 
 
 int main() {
   PASSFAIL(spsc_new_pass());
   PASSFAIL(spsc_new_fail());
+  PASSFAIL(spsc_trypush_slot_pass());
+  PASSFAIL(spsc_trypop_slot_pass());
+
   return 0;
 }
 
@@ -83,3 +89,65 @@ int spsc_new_fail() {
   return 1;
 }
 
+int spsc_trypush_slot_pass() {
+  cqueue_spsc *q;
+  int i;
+  char data;
+  char *p;
+
+  q  = cqueue_spsc_new(26, sizeof(char));
+  assert(q);
+
+  // insert dummy data for testing
+  for(i=0, data='A'; i < 26; i++, data++) {
+    p = cqueue_spsc_trypush_slot(q);
+    assert(p);
+    *p = data;
+    cqueue_spsc_push_slot_finish(q);
+  }
+
+  // check index, used flag, and data
+  assert(q->push_idx == 26);
+  void *offset = (char *)(q->array + 12*q->elem_size);
+  size_t used = *(size_t *)offset;
+  assert(used == 1);
+  char *c = (char *)offset + sizeof(size_t);
+  assert(*c == 'M');
+
+  return 1;
+}
+
+
+int spsc_trypop_slot_pass() {
+  cqueue_spsc *q;
+  int i;
+  char data;
+  char *p;
+
+  q  = cqueue_spsc_new(26, sizeof(char));
+  assert(q);
+
+  // insert dummy data for testing
+  for(i=0, data='A'; i < 26; i++, data++) {
+    p = cqueue_spsc_trypush_slot(q);
+    assert(p);
+    *p = data;
+    cqueue_spsc_push_slot_finish(q);
+  }
+
+  // pop some data so we're not at the start
+  for(i=0; i < 13; i++) {
+    p = cqueue_spsc_trypop_slot(q);
+    assert(p);
+    cqueue_spsc_pop_slot_finish(q);
+  }
+
+  // check index, used flag, and data
+  assert(q->pop_idx == 13);
+  void *offset = (char *)(q->array + 12*q->elem_size);
+  size_t used = *(size_t *)offset;
+  assert(used == 0);
+  assert(*p == 'M');
+
+  return 1;
+}
