@@ -79,7 +79,11 @@ void *passer(void *targ) {
   int *p;
 
   while(1) {
-    while ((p = cqueue_spsc_trypop_slot(args->in)) == NULL);
+    while ((p = cqueue_spsc_trypop_slot(args->in)) == NULL) {
+      // yielding hurts when NUM_THREADS == NUM_CPUS, however it lowers
+      // the real time to completion when NUM_THREADS > NUM_CPUS
+      pthread_yield();
+    }
     data = *p;
     cqueue_spsc_pop_slot_finish(args->in);
 

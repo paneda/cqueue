@@ -35,6 +35,7 @@ callgrind.out.*
 cqueue_test
 cqueue_test_singlethread
 cqueue_test_passing
+cqueue_test_spsc
 
 # generated documentation
 doc/xml
