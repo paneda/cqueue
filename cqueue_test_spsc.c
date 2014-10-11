@@ -14,11 +14,13 @@ typedef enum {
 
 
 struct thread_args {
-  int id;
+  char pad1[LEVEL1_DCACHE_LINESIZE/2];
   uint64_t limit;
-  uint64_t passes;
-  thread_type t;
   cqueue_spsc *q;
+  int id;
+  thread_type t;
+  uint64_t passes;
+  char pad2[LEVEL1_DCACHE_LINESIZE/2];
 };
 
 static struct thread_args targs[NUM_THREADS];
@@ -77,6 +79,7 @@ void *producer(void *targ) {
     p = cqueue_spsc_push_slot(args->q);
     *p = data;
     cqueue_spsc_push_slot_finish(args->q);
+    args->passes++;
   }
 
   pthread_exit(NULL);

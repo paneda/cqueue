@@ -7,10 +7,12 @@
 #define NUM_THREADS 2
 
 struct thread_args {
-  int id;
-  int passes;
+  char pad1[LEVEL1_DCACHE_LINESIZE/2];
   cqueue_spsc *in;
   cqueue_spsc *out;
+  int id;
+  int passes;
+  char pad2[LEVEL1_DCACHE_LINESIZE/2];
 };
 
 static struct thread_args targs[NUM_THREADS];
