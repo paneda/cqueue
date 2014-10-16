@@ -1,5 +1,5 @@
 CC?=gcc
-CFLAGS=-g -march=native -O3 -pipe -std=c11 -Wall -Werror -DCQUEUE_DEBUG
+CFLAGS=-g -march=native -O3 -pipe -std=c11 -Wall -Werror -Wextra -DCQUEUE_DEBUG
 LDFLAGS=-pthread
 EXES=cqueue_test cqueue_test_singlethread cqueue_test_passing cqueue_test_spsc
 OBJS=cqueue.o

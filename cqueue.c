@@ -208,7 +208,7 @@ size_t next_power2(size_t i) {
     return 1;
 
   i--;
-  for (int j = 1; j < CHAR_BIT*sizeof(size_t)-1; j*=2)
+  for (uint64_t j = 1; j < CHAR_BIT*sizeof(size_t)-1; j*=2)
     i |= i >> j;
   i++;
 
