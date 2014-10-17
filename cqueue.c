@@ -44,8 +44,15 @@ cqueue_spsc* cqueue_spsc_new(size_t capacity, size_t elem_size) {
   n_cachelines = sizeof(cqueue_spsc) / LEVEL1_DCACHE_LINESIZE;
   if (n_cachelines * LEVEL1_DCACHE_LINESIZE != sizeof(cqueue_spsc))
     n_cachelines++;
+
+#ifdef SANITIZE
+  posix_memalign((void **)&q, LEVEL1_DCACHE_LINESIZE,
+                    LEVEL1_DCACHE_LINESIZE * n_cachelines);
+#else
   q = aligned_alloc(LEVEL1_DCACHE_LINESIZE, 
                     LEVEL1_DCACHE_LINESIZE * n_cachelines);
+#endif
+
   if (!q)
     return NULL;
 
@@ -68,7 +75,11 @@ cqueue_spsc* cqueue_spsc_new(size_t capacity, size_t elem_size) {
  
   // allocate array as a cacheline-aligned chunk of elements, where each
   // element has a size that is a multiple of the cacheline size
+#ifdef SANITIZE
+  posix_memalign((void **)&(q->array), LEVEL1_DCACHE_LINESIZE, i);
+#else
   q->array = aligned_alloc(LEVEL1_DCACHE_LINESIZE, i);
+#endif
   if (!q->array) {
     free(q);
     return NULL;

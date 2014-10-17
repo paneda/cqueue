@@ -1,3 +1,7 @@
+#ifdef NDEBUG
+#undef NDEBUG
+#endif
+
 #include "cqueue.h"
 #include <stdio.h>  // printf
 #include <assert.h>
@@ -46,13 +50,13 @@ int spsc_new_pass() {
   }
 
   // check struct layout
-  d = ((void *)q - (void *)&q->capacity);
+  d = ((char *)(void *)q - (char *)(void *)&q->capacity);
   assert(d == 0); // capacity is the first member
 
-  d = (void *)&q->push_idx - (void *)&q->capacity;
+  d = (char *)(void *)&q->push_idx - (char*)(void *)&q->capacity;
   assert(d == LEVEL1_DCACHE_LINESIZE);  // should be 1 cacheline due to padding
 
-  d = (void *)&q->pop_idx - (void *)&q->push_idx;
+  d = (char *)(void *)&q->pop_idx - (char *)(void *)&q->push_idx;
   assert(d == LEVEL1_DCACHE_LINESIZE); // should be 1 cacheline due to padding
 
   // check deletion

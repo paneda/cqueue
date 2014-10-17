@@ -1,6 +1,9 @@
 CC?=gcc
-CFLAGS=-g -march=native -O3 -pipe -std=c11 -Wall -Werror -Wextra -DCQUEUE_DEBUG
-LDFLAGS=-pthread
+CFLAGS=-march=native -O3 -pipe -std=c11 -Wall -Werror -Wextra -Wpedantic -fPIC
+CFLAGS+=-g -DCQUEUE_DEBUG -DNDEBUG
+#CFLAGS+=-fsanitize=address -fsanitize=undefined -DSANITIZE -D_GNU_SOURCE
+#CFLAGS+=-fsanitize=thread -fsanitize=undefined -DSANITIZE -D_GNU_SOURCE
+LDFLAGS=-pthread -pie
 EXES=cqueue_test cqueue_test_singlethread cqueue_test_passing cqueue_test_spsc
 OBJS=cqueue.o
 TEMPDIR := $(shell mktemp -d)
