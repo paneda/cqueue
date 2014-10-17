@@ -1,6 +1,6 @@
 CC?=gcc
-CFLAGS=-march=native -O3 -pipe -std=c11 -Wall -Werror -Wextra -Wpedantic -fPIC
-CFLAGS+=-g -DCQUEUE_DEBUG -DNDEBUG
+CFLAGS=-march=native -O3 -pipe -std=c11 -Wall -Werror -Wextra -Wpedantic -fPIC -DNDEBUG
+CFLAGS+=-g -DCQUEUE_DEBUG -UNDEBUG
 #CFLAGS+=-fsanitize=address -fsanitize=undefined -DSANITIZE -D_GNU_SOURCE
 #CFLAGS+=-fsanitize=thread -fsanitize=undefined -DSANITIZE -D_GNU_SOURCE
 LDFLAGS=-pthread -pie

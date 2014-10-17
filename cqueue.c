@@ -40,9 +40,12 @@ cqueue_spsc* cqueue_spsc_new(size_t capacity, size_t elem_size) {
   if (!realcap)
     return NULL;
 
+  // check posix_memalign conditions
   assert(is_power2(LEVEL1_DCACHE_LINESIZE));
+  assert(LEVEL1_DCACHE_LINESIZE % sizeof(void *) == 0);
+
   n_cachelines = sizeof(cqueue_spsc) / LEVEL1_DCACHE_LINESIZE;
-  if (n_cachelines * LEVEL1_DCACHE_LINESIZE != sizeof(cqueue_spsc))
+  if (n_cachelines * LEVEL1_DCACHE_LINESIZE < sizeof(cqueue_spsc))
     n_cachelines++;
 
 #ifdef SANITIZE
@@ -61,14 +64,20 @@ cqueue_spsc* cqueue_spsc_new(size_t capacity, size_t elem_size) {
   // round the elem size up to the nearest cacheline and account for 
   // slot overhead
   n_cachelines = (elem_size + sizeof(_Atomic size_t))/ LEVEL1_DCACHE_LINESIZE;
-  if (n_cachelines * LEVEL1_DCACHE_LINESIZE != 
+  if (n_cachelines * LEVEL1_DCACHE_LINESIZE < 
       (elem_size + sizeof(_Atomic size_t)))
     n_cachelines++;
+
+  // check for n_cachelines overflow
+  if (n_cachelines > SIZE_MAX/LEVEL1_DCACHE_LINESIZE) {
+      free(q);
+      return NULL;
+  }
   q->elem_size = n_cachelines * LEVEL1_DCACHE_LINESIZE;
 
-  // check for overflow
-  i = q->capacity * q->elem_size;
-  if ((i < q->capacity) || (i < q->elem_size)) {
+  // check for capacity * elem_size overflow
+  if ((q->capacity > (size_t)(SIZE_MAX/(q->elem_size))) || 
+      (q->elem_size > (size_t)(SIZE_MAX/(q->capacity)))) {
     free(q);
     return NULL;
   }
@@ -76,9 +85,10 @@ cqueue_spsc* cqueue_spsc_new(size_t capacity, size_t elem_size) {
   // allocate array as a cacheline-aligned chunk of elements, where each
   // element has a size that is a multiple of the cacheline size
 #ifdef SANITIZE
-  posix_memalign((void **)&(q->array), LEVEL1_DCACHE_LINESIZE, i);
+  posix_memalign((void **)&(q->array), LEVEL1_DCACHE_LINESIZE,
+                  q->capacity * q->elem_size);
 #else
-  q->array = aligned_alloc(LEVEL1_DCACHE_LINESIZE, i);
+  q->array = aligned_alloc(LEVEL1_DCACHE_LINESIZE, q->capacity * q->elem_size);
 #endif
   if (!q->array) {
     free(q);

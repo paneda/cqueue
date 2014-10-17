@@ -83,7 +83,7 @@ int spsc_new_fail() {
   assert(!q);
 
   // fail on memory allocation
-  q = cqueue_spsc_new(1, SIZE_MAX-sizeof(_Atomic size_t));
+  q = cqueue_spsc_new(1, SIZE_MAX-sizeof(_Atomic size_t)-LEVEL1_DCACHE_LINESIZE);
   assert(!q);
 
   // fail on overflow of capacity * elem_size
