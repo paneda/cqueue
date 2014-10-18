@@ -118,7 +118,7 @@ void cqueue_spsc_delete(cqueue_spsc **p) {
   *p = NULL;
 }
 
-void *cqueue_spsc_push_slot(cqueue_spsc *q) {
+void* cqueue_spsc_push_slot(cqueue_spsc *q) {
   assert(q);
 
   cqueue_spsc_slot *slot;
@@ -130,7 +130,7 @@ void *cqueue_spsc_push_slot(cqueue_spsc *q) {
   return slot->data;
 }
 
-void *cqueue_spsc_trypush_slot(cqueue_spsc *q) {
+void* cqueue_spsc_trypush_slot(cqueue_spsc *q) {
   assert(q);
 
   cqueue_spsc_slot *slot;
@@ -153,7 +153,7 @@ void cqueue_spsc_push_slot_finish(cqueue_spsc *q) {
   q->push_idx = (q->push_idx + 1) & (q->capacity - 1);
 }
 
-void *cqueue_spsc_pop_slot(cqueue_spsc *q) {
+void* cqueue_spsc_pop_slot(cqueue_spsc *q) {
   assert(q);
 
   cqueue_spsc_slot *slot;
@@ -165,7 +165,7 @@ void *cqueue_spsc_pop_slot(cqueue_spsc *q) {
   return slot->data;
 }
 
-void *cqueue_spsc_trypop_slot(cqueue_spsc *q) {
+void* cqueue_spsc_trypop_slot(cqueue_spsc *q) {
   assert(q);
 
   cqueue_spsc_slot *slot;

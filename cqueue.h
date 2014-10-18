@@ -69,9 +69,14 @@ cqueue_spsc* cqueue_spsc_new(size_t capacity, size_t elem_size);
 */
 void cqueue_spsc_delete(cqueue_spsc **p);
 
-void *cqueue_spsc_push_slot(cqueue_spsc *q);
+/*! Get a pointer to the next available queue slot for pushing
 
+  cqueue_spsc_push_slot_finish must be called after a successful call
 
+  ex: cqueue_spsc_push_slot(), write data, cqueue_spsc_push_slot_finish()
+  \returns a pointer to the next available queue slot, or blocks (spins) when the queue is full
+*/
+void* cqueue_spsc_push_slot(cqueue_spsc *q);
 
 /*! Get a pointer to the next available queue slot for pushing
 
@@ -80,7 +85,7 @@ void *cqueue_spsc_push_slot(cqueue_spsc *q);
   ex: cqueue_spsc_trypush_slot(), write data, cqueue_spsc_push_slot_finish()
   \returns a pointer to the next available queue slot, or NULL when the queue is full
 */
-void *cqueue_spsc_trypush_slot(cqueue_spsc *q);
+void* cqueue_spsc_trypush_slot(cqueue_spsc *q);
 
 /*! Publish the fact that the push slot is now used
 
@@ -91,11 +96,14 @@ void *cqueue_spsc_trypush_slot(cqueue_spsc *q);
 */
 void cqueue_spsc_push_slot_finish(cqueue_spsc *q);
 
+/*! Get a pointer to the next available queue slot for popping
 
-void *cqueue_spsc_pop_slot(cqueue_spsc *q);
+  cqueue_spsc_pop_slot_finish must be called after a successful call
 
-
-
+  ex: cqueue_spsc_pop_slot(), read data, cqueue_spsc_pop_slot_finish()
+  \returns a pointer to the next available queue slot, or blocks (spins) when the queue is empty
+*/
+void* cqueue_spsc_pop_slot(cqueue_spsc *q);
 
 /*! Get a pointer to the next available queue slot for popping
 
@@ -104,7 +112,7 @@ void *cqueue_spsc_pop_slot(cqueue_spsc *q);
   ex: cqueue_spsc_trypop_slot(), read data, cqueue_spsc_pop_slot_finish()
   \returns a pointer to the next available queue slot, or NULL when the queue is empty
 */
-void *cqueue_spsc_trypop_slot(cqueue_spsc *q);
+void* cqueue_spsc_trypop_slot(cqueue_spsc *q);
 
 /*! Publish the fact that the pop slot is now unused
 
