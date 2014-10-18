@@ -21,9 +21,9 @@ typedef struct cqueue_spsc_slot {
 } cqueue_spsc_slot;
 
 
-// utility function declarations
-size_t next_power2(size_t i);
-int is_power2(size_t i);
+// private function declarations
+static size_t next_power2(size_t i);
+static int is_power2(size_t i);
 
 
 // public functions declared in the header
