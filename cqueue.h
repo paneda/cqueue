@@ -24,7 +24,7 @@
 /*! Used to align and place objects to avoid false sharing
 
   On modern Intel x86 CPUs, this is typically 64 bytes
-  On Linux it can be defined while compiling with 
+  On Linux it can be defined while compiling with
   \verbatim -DLEVEL1_DCACHE_LINESIZE=`getconf LEVEL1_DCACHE_LINESIZE` \endverbatim
 */
 #define LEVEL1_DCACHE_LINESIZE 64
@@ -44,8 +44,9 @@ typedef struct cqueue_spsc {
   size_t capacity;
   size_t elem_size;
   unsigned char *array;
-  char pad1[LEVEL1_DCACHE_LINESIZE - 2 * sizeof(size_t) 
-            - sizeof(unsigned char*)]; 
+  _Atomic size_t n_used_slots;
+  char pad1[LEVEL1_DCACHE_LINESIZE - 2 * sizeof(size_t)
+            - sizeof(unsigned char*) - sizeof(size_t)];
   // ensure that push_idx and pop_idx are on their own cachelines to
   // prevent false sharing
   size_t push_idx;
@@ -64,7 +65,7 @@ cqueue_spsc* cqueue_spsc_new(size_t capacity, size_t elem_size);
 
 /*! Deallocates the queue
 
-  \param[in,out] p a pointer to the pointer to the queue to be deallocated. 
+  \param[in,out] p a pointer to the pointer to the queue to be deallocated.
   On success, *p will be set to NULL.
 */
 void cqueue_spsc_delete(cqueue_spsc **p);
@@ -123,9 +124,16 @@ void* cqueue_spsc_trypop_slot(cqueue_spsc *q);
 */
 void cqueue_spsc_pop_slot_finish(cqueue_spsc *q);
 
+/*! Get number of used slots
+ \returns number of used slots
+*/
+size_t cqueue_spsc_get_no_used_slots(cqueue_spsc *q);
+
 #ifdef CQUEUE_DEBUG
 //! Print the queue contents to stdout
 void cqueue_spsc_print(cqueue_spsc *q);
 #endif
 
 #endif  // _CQUEUE_
+// vim: et:ts=3:sw=3:sts=3
+
