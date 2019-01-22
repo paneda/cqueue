@@ -108,6 +108,7 @@ int spsc_trypush_slot_pass() {
     assert(p);
     *p = data;
     cqueue_spsc_push_slot_finish(q);
+	assert(cqueue_spsc_get_no_used_slots(q) == (size_t)i + 1);
   }
 
   // check index, used flag, and data
@@ -137,13 +138,16 @@ int spsc_trypop_slot_pass() {
     assert(p);
     *p = data;
     cqueue_spsc_push_slot_finish(q);
+	assert(cqueue_spsc_get_no_used_slots(q) == (size_t) i + 1);
   }
 
   // pop some data so we're not at the start
+  size_t start_count = cqueue_spsc_get_no_used_slots(q);
   for(i=0; i < 13; i++) {
     p = cqueue_spsc_trypop_slot(q);
     assert(p);
     cqueue_spsc_pop_slot_finish(q);
+	assert(cqueue_spsc_get_no_used_slots(q) == start_count - i - 1);
   }
 
   // check index, used flag, and data

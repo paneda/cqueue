@@ -9,7 +9,7 @@
 /*! internal representation of a spsc slot
 
   This is a helper struct to maintain the illusion of an array of slots.
-  Contains the used member that is atomically loaded or written to by a 
+  Contains the used member that is atomically loaded or written to by a
   pusher or popper, and a pointer to the slot's storage space to provide
   access to pushers and poppers. Although data is a zero length array, it
   allows access to bytes beyond it that are allocated specifically for its
@@ -20,6 +20,7 @@ typedef struct cqueue_spsc_slot {
   unsigned char data[]; //!< pointer to data provided to pushers/poppers
 } cqueue_spsc_slot;
 
+// private data
 
 // private function declarations
 static size_t next_power2(size_t i);
@@ -52,7 +53,7 @@ cqueue_spsc* cqueue_spsc_new(size_t capacity, size_t elem_size) {
   posix_memalign((void **)&q, LEVEL1_DCACHE_LINESIZE,
                     LEVEL1_DCACHE_LINESIZE * n_cachelines);
 #else
-  q = aligned_alloc(LEVEL1_DCACHE_LINESIZE, 
+  q = aligned_alloc(LEVEL1_DCACHE_LINESIZE,
                     LEVEL1_DCACHE_LINESIZE * n_cachelines);
 #endif
 
@@ -61,10 +62,10 @@ cqueue_spsc* cqueue_spsc_new(size_t capacity, size_t elem_size) {
 
   q->capacity = realcap;
 
-  // round the elem size up to the nearest cacheline and account for 
+  // round the elem size up to the nearest cacheline and account for
   // slot overhead
   n_cachelines = (elem_size + sizeof(_Atomic size_t))/ LEVEL1_DCACHE_LINESIZE;
-  if (n_cachelines * LEVEL1_DCACHE_LINESIZE < 
+  if (n_cachelines * LEVEL1_DCACHE_LINESIZE <
       (elem_size + sizeof(_Atomic size_t)))
     n_cachelines++;
 
@@ -76,12 +77,12 @@ cqueue_spsc* cqueue_spsc_new(size_t capacity, size_t elem_size) {
   q->elem_size = n_cachelines * LEVEL1_DCACHE_LINESIZE;
 
   // check for capacity * elem_size overflow
-  if ((q->capacity > (size_t)(SIZE_MAX/(q->elem_size))) || 
+  if ((q->capacity > (size_t)(SIZE_MAX/(q->elem_size))) ||
       (q->elem_size > (size_t)(SIZE_MAX/(q->capacity)))) {
     free(q);
     return NULL;
   }
- 
+
   // allocate array as a cacheline-aligned chunk of elements, where each
   // element has a size that is a multiple of the cacheline size
 #ifdef SANITIZE
@@ -102,7 +103,7 @@ cqueue_spsc* cqueue_spsc_new(size_t capacity, size_t elem_size) {
 
   q->push_idx = 0;
   q->pop_idx = 0;
-
+  q->n_used_slots = 0;
   return q;
 }
 
@@ -127,6 +128,8 @@ void* cqueue_spsc_push_slot(cqueue_spsc *q) {
   // check if the queue is full, ie we are trying to write to a used slot
   while(atomic_load_explicit(&slot->used, memory_order_acquire));
 
+  atomic_fetch_add_explicit(&q->n_used_slots, 1, memory_order_relaxed);
+
   return slot->data;
 }
 
@@ -148,9 +151,11 @@ void cqueue_spsc_push_slot_finish(cqueue_spsc *q) {
 
   cqueue_spsc_slot *slot;
   slot = (cqueue_spsc_slot *)(q->array + q->push_idx * q->elem_size);
-  
+
   atomic_store_explicit(&slot->used, 1, memory_order_release);
   q->push_idx = (q->push_idx + 1) & (q->capacity - 1);
+
+  atomic_fetch_add_explicit(&q->n_used_slots, 1, memory_order_relaxed);
 }
 
 void* cqueue_spsc_pop_slot(cqueue_spsc *q) {
@@ -162,6 +167,7 @@ void* cqueue_spsc_pop_slot(cqueue_spsc *q) {
   // check if the queue is empty, ie we are trying to read an unused slot
   while(!atomic_load_explicit(&slot->used, memory_order_acquire));
 
+  atomic_fetch_sub_explicit(&q->n_used_slots, 1, memory_order_relaxed);
   return slot->data;
 }
 
@@ -186,6 +192,11 @@ void cqueue_spsc_pop_slot_finish(cqueue_spsc *q) {
 
   atomic_store_explicit(&slot->used, 0, memory_order_release);
   q->pop_idx = (q->pop_idx + 1) & (q->capacity - 1);
+  atomic_fetch_sub_explicit(&q->n_used_slots, 1, memory_order_relaxed);
+}
+
+size_t cqueue_spsc_get_no_used_slots(cqueue_spsc *q) {
+  return atomic_load_explicit(&q->n_used_slots, memory_order_acquire);
 }
 
 #ifdef CQUEUE_DEBUG
@@ -250,3 +261,4 @@ int is_power2(size_t i) {
 
   return 0;
 }
+// vim: et:ts=2:sw=2:sts=2
