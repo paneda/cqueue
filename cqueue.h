@@ -46,7 +46,7 @@ typedef struct cqueue_spsc {
   unsigned char *array;
   _Atomic size_t n_used_slots;
   char pad1[LEVEL1_DCACHE_LINESIZE - 2 * sizeof(size_t)
-            - sizeof(unsigned char*) - sizeof(size_t)];
+            - sizeof(unsigned char*) - sizeof(_Atomic size_t)];
   // ensure that push_idx and pop_idx are on their own cachelines to
   // prevent false sharing
   size_t push_idx;
