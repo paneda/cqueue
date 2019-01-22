@@ -20,8 +20,6 @@ typedef struct cqueue_spsc_slot {
   unsigned char data[]; //!< pointer to data provided to pushers/poppers
 } cqueue_spsc_slot;
 
-// private data
-
 // private function declarations
 static size_t next_power2(size_t i);
 static int is_power2(size_t i);
